@@ -32,4 +32,19 @@
     <string name="tip_3">A 25‑minute focus block beats endless scrolling.</string>
     <string name="tip_4">Check page numbers carefully before you open the book.</string>
     <string name="tip_5">Finish science or math when your mind is freshest.</string>
+    <string name="tip_6">Read the question twice before you start writing.</string>
+    <string name="tip_7">Write headings first — structure makes the rest easier.</string>
+    <string name="tip_8">Keep water nearby; a quick sip helps focus.</string>
+    <string name="tip_9">If stuck for 10 minutes, mark it and move on, then return.</string>
+    <string name="tip_10">Review yesterday’s mistakes — that is free marks next time.</string>
+    <string name="tip_11">Silence notifications until the homework list is done.</string>
+    <string name="tip_12">Use a checklist and tick subjects as you finish them.</string>
+    <string name="tip_13">Explain a tough idea out loud as if teaching a friend.</string>
+    <string name="tip_14">Neat handwriting slows you just enough to think clearly.</string>
+    <string name="tip_15">End with a 3‑minute recap of what you learned today.</string>
+    <string name="tip_16">Hard subject first or last — pick one rule and stick to it.</string>
+    <string name="tip_17">Stretch for 60 seconds between subjects to reset your brain.</string>
+    <string name="tip_18">Don’t copy blindly; rewrite in your own words to remember.</string>
+    <string name="tip_19">Ask for help early — waiting until night makes it harder.</string>
+    <string name="tip_20">Celebrate small wins: one finished subject is progress.</string>
 </resources>

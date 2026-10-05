@@ -21,19 +21,19 @@ sealed class HomeworkResult {
 }
 
 object Subjects {
-    data class Info(val key: String, val label: String, val emoji: String)
+    data class Info(val key: String, val label: String, val iconRes: Int)
 
     val ALL = listOf(
-        Info("english", "English", "📘"),
-        Info("urdu", "Urdu", "📗"),
-        Info("mathematics", "Mathematics", "🔢"),
-        Info("science", "Science", "🔬"),
-        Info("islamiat", "Islamiat", "🌙"),
-        Info("tarjama-tul-quran", "Tarjama-tul-Quran", "📖"),
-        Info("ethics", "Ethics", "💜"),
-        Info("drawing", "Drawing", "🎨"),
-        Info("geography", "Geography", "🌍"),
-        Info("history", "History", "🏺"),
-        Info("computer-science", "Computer Science", "💻"),
+        Info("english", "English", R.drawable.ic_subj_english),
+        Info("urdu", "Urdu", R.drawable.ic_subj_urdu),
+        Info("mathematics", "Mathematics", R.drawable.ic_subj_math),
+        Info("science", "Science", R.drawable.ic_subj_science),
+        Info("islamiat", "Islamiat", R.drawable.ic_subj_islamiat),
+        Info("tarjama-tul-quran", "Tarjama-tul-Quran", R.drawable.ic_subj_quran),
+        Info("ethics", "Ethics", R.drawable.ic_subj_ethics),
+        Info("drawing", "Drawing", R.drawable.ic_subj_drawing),
+        Info("geography", "Geography", R.drawable.ic_subj_geo),
+        Info("history", "History", R.drawable.ic_subj_history),
+        Info("computer-science", "Computer Science", R.drawable.ic_subj_cs),
     )
 }

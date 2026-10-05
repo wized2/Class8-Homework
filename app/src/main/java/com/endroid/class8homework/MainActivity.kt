@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
+import io.noties.markwon.Markwon
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -51,23 +52,23 @@ class MainActivity : AppCompatActivity() {
     private lateinit var hwStatusChip: TextView
     private lateinit var retryBtn: MaterialButton
 
-    private val adapter = SubjectAdapter()
+    private lateinit var adapter: SubjectAdapter
+    private lateinit var markwon: Markwon
     private var lastData: HomeworkData? = null
 
     private val tips by lazy {
-        listOf(
-            getString(R.string.tip_1),
-            getString(R.string.tip_2),
-            getString(R.string.tip_3),
-            getString(R.string.tip_4),
-            getString(R.string.tip_5),
-        )
+        (1..20).mapNotNull { i ->
+            val id = resources.getIdentifier("tip_$i", "string", packageName)
+            if (id != 0) getString(id) else null
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         repo = HomeworkRepository(this)
+        markwon = Markwon.create(this)
+        adapter = SubjectAdapter(markwon)
 
         content = findViewById(R.id.content)
         bottomNav = findViewById(R.id.bottomNav)
