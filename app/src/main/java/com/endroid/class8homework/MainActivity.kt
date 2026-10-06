@@ -3,7 +3,9 @@ package com.endroid.class8homework
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +15,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.materialswitch.MaterialSwitch
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import kotlinx.coroutines.launch
@@ -26,11 +30,14 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private lateinit var repo: HomeworkRepository
+    private lateinit var aiRepo: AiRepository
     private lateinit var content: FrameLayout
     private lateinit var bottomNav: BottomNavigationView
 
     private lateinit var homeView: View
     private lateinit var homeworkView: View
+    private lateinit var moreView: View
+    private lateinit var aiView: View
 
     private lateinit var greetingIcon: ImageView
     private lateinit var greetingTitle: TextView
@@ -55,7 +62,19 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var adapter: SubjectAdapter
     private lateinit var markwon: Markwon
+    private lateinit var chatAdapter: ChatAdapter
+
+    private lateinit var aiList: RecyclerView
+    private lateinit var aiInput: EditText
+    private lateinit var aiSend: ImageButton
+    private lateinit var aiBack: ImageButton
+    private lateinit var aiClear: ImageButton
+    private lateinit var aiWebSearch: MaterialSwitch
+
     private var lastData: HomeworkData? = null
+    private val chatHistory = mutableListOf<AiRepository.ChatMessage>()
+    private val chatUi = mutableListOf<ChatAdapter.Item>()
+    private var aiBusy = false
 
     private val tips by lazy {
         (1..20).mapNotNull { i ->
@@ -68,10 +87,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         repo = HomeworkRepository(this)
+        aiRepo = AiRepository()
         markwon = Markwon.builder(this)
             .usePlugin(SoftBreakAddsNewLinePlugin.create())
             .build()
         adapter = SubjectAdapter(markwon)
+        chatAdapter = ChatAdapter(markwon)
 
         content = findViewById(R.id.content)
         bottomNav = findViewById(R.id.bottomNav)
@@ -79,22 +100,32 @@ class MainActivity : AppCompatActivity() {
         val inflater = LayoutInflater.from(this)
         homeView = inflater.inflate(R.layout.panel_home, content, false)
         homeworkView = inflater.inflate(R.layout.panel_homework, content, false)
+        moreView = inflater.inflate(R.layout.panel_more, content, false)
+        aiView = inflater.inflate(R.layout.panel_ai, content, false)
 
         bindHome(homeView)
         bindHomework(homeworkView)
+        bindMore(moreView)
+        bindAi(aiView)
 
         content.addView(homeView)
         content.addView(homeworkView)
-        showPanel(home = true)
+        content.addView(moreView)
+        content.addView(aiView)
+        showMainPanel("home")
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    showPanel(home = true)
+                    showMainPanel("home")
                     true
                 }
                 R.id.nav_homework -> {
-                    showPanel(home = false)
+                    showMainPanel("homework")
+                    true
+                }
+                R.id.nav_more -> {
+                    showMainPanel("more")
                     true
                 }
                 else -> false
@@ -102,16 +133,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         applyGreeting()
-        tipText.text = tips[LocalDate.now().dayOfYear % tips.size]
+        if (tips.isNotEmpty()) {
+            tipText.text = tips[LocalDate.now().dayOfYear % tips.size]
+        }
         statTotalCount.text = Subjects.ALL.size.toString()
+
+        seedWelcomeChat()
 
         repo.loadCache()?.let { renderLoaded(it, fromCache = true) }
         refresh()
     }
 
-    private fun showPanel(home: Boolean) {
-        homeView.visibility = if (home) View.VISIBLE else View.GONE
-        homeworkView.visibility = if (home) View.GONE else View.VISIBLE
+    private fun showMainPanel(name: String) {
+        homeView.visibility = if (name == "home") View.VISIBLE else View.GONE
+        homeworkView.visibility = if (name == "homework") View.VISIBLE else View.GONE
+        moreView.visibility = if (name == "more") View.VISIBLE else View.GONE
+        aiView.visibility = if (name == "ai") View.VISIBLE else View.GONE
+        bottomNav.visibility = if (name == "ai") View.GONE else View.VISIBLE
     }
 
     private fun bindHome(v: View) {
@@ -148,6 +186,87 @@ class MainActivity : AppCompatActivity() {
         swipe.setColorSchemeResources(R.color.seed)
         swipe.setOnRefreshListener { refresh() }
         retryBtn.setOnClickListener { refresh() }
+    }
+
+    private fun bindMore(v: View) {
+        v.findViewById<MaterialCardView>(R.id.cardAiHelper).setOnClickListener {
+            showMainPanel("ai")
+        }
+    }
+
+    private fun bindAi(v: View) {
+        aiList = v.findViewById(R.id.aiList)
+        aiInput = v.findViewById(R.id.aiInput)
+        aiSend = v.findViewById(R.id.aiSend)
+        aiBack = v.findViewById(R.id.aiBack)
+        aiClear = v.findViewById(R.id.aiClear)
+        aiWebSearch = v.findViewById(R.id.aiWebSearch)
+
+        aiList.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
+        aiList.adapter = chatAdapter
+
+        aiBack.setOnClickListener {
+            showMainPanel("more")
+            bottomNav.selectedItemId = R.id.nav_more
+        }
+        aiClear.setOnClickListener {
+            chatHistory.clear()
+            chatUi.clear()
+            seedWelcomeChat()
+        }
+        aiSend.setOnClickListener { sendAi() }
+    }
+
+    private fun seedWelcomeChat() {
+        chatUi.clear()
+        chatUi.add(ChatAdapter.Item(fromUser = false, text = getString(R.string.ai_welcome)))
+        chatAdapter.submit(chatUi.toList())
+    }
+
+    private fun sendAi() {
+        if (aiBusy) return
+        val text = aiInput.text?.toString()?.trim().orEmpty()
+        if (text.isEmpty()) return
+        aiInput.setText("")
+
+        chatUi.add(ChatAdapter.Item(fromUser = true, text = text))
+        chatHistory.add(AiRepository.ChatMessage("user", text))
+        chatUi.add(ChatAdapter.Item(fromUser = false, text = getString(R.string.ai_thinking)))
+        chatAdapter.submit(chatUi.toList())
+        aiList.scrollToPosition(chatUi.size - 1)
+
+        aiBusy = true
+        aiSend.isEnabled = false
+        lifecycleScope.launch {
+            val hist = AiRepository.CLASS8_PRIMER + chatHistory.dropLast(1)
+            val result = aiRepo.ask(text, hist, aiWebSearch.isChecked)
+            // remove thinking
+            if (chatUi.isNotEmpty() && chatUi.last().text == getString(R.string.ai_thinking)) {
+                chatUi.removeAt(chatUi.lastIndex)
+            }
+            result.fold(
+                onSuccess = { reply ->
+                    chatUi.add(ChatAdapter.Item(fromUser = false, text = reply))
+                    chatHistory.add(AiRepository.ChatMessage("model", reply))
+                },
+                onFailure = {
+                    chatUi.add(
+                        ChatAdapter.Item(
+                            fromUser = false,
+                            text = getString(R.string.ai_error) + "\n\n" + (it.message ?: "")
+                        )
+                    )
+                    // roll back last user history on hard fail so retries are clean
+                    if (chatHistory.isNotEmpty() && chatHistory.last().role == "user") {
+                        chatHistory.removeAt(chatHistory.lastIndex)
+                    }
+                }
+            )
+            chatAdapter.submit(chatUi.toList())
+            aiList.scrollToPosition(chatUi.size - 1)
+            aiBusy = false
+            aiSend.isEnabled = true
+        }
     }
 
     private fun applyGreeting() {

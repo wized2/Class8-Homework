@@ -3,6 +3,17 @@
     <string name="app_name">Class 8 Homework</string>
     <string name="tab_home">Home</string>
     <string name="tab_homework">Homework</string>
+    <string name="tab_more">More</string>
+    <string name="ai_helper">AI Helper</string>
+    <string name="ai_helper_sub">Class 8 tutor · Urdu &amp; English</string>
+    <string name="ai_hint">Ask a question…</string>
+    <string name="ai_send">Send</string>
+    <string name="ai_thinking">Thinking…</string>
+    <string name="ai_error">Could not reach AI Helper. Check internet and try again.</string>
+    <string name="ai_welcome">Assalam-o-Alaikum! I'm your Class 8 study helper. Ask in **English** or **Urdu** — math, science, grammar, or anything from your books. 📚</string>
+    <string name="more_title">More</string>
+    <string name="web_search_toggle">Web search</string>
+    <string name="clear_chat">Clear chat</string>
     <string name="subtitle">Today’s work · Class 8</string>
     <string name="pull_refresh">Pull to refresh</string>
     <string name="no_homework">No homework posted yet</string>
