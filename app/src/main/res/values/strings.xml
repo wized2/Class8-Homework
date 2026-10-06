@@ -67,5 +67,6 @@
     <string name="continue_btn">Continue</string>
     <string name="greeting_named">Ready for Class 8, %1$s?</string>
     <string name="name_required">Please enter your full name</string>
+    <string name="designed_by">Designed by Mudasir Wazir</string>
 </resources>
 
