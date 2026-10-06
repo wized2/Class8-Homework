@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Class 8 Homework</string>
+    <string name="app_name">Class 8</string>
     <string name="tab_home">Home</string>
     <string name="tab_homework">Homework</string>
     <string name="tab_more">More</string>
@@ -33,7 +33,7 @@
     <string name="stat_total">Total subjects</string>
     <string name="stat_done_hint">Focus on these first</string>
     <string name="quick_tip_title">Study tip</string>
-    <string name="open_homework">Open homework</string>
+    <string name="open_homework">Homework</string>
     <string name="refresh">Refresh</string>
     <string name="today_summary">Today’s summary</string>
     <string name="subjects_with_work">%1$d of %2$d subjects have work</string>
@@ -58,4 +58,14 @@
     <string name="tip_18">Don\'t copy blindly; rewrite in your own words to remember.</string>
     <string name="tip_19">Ask for help early — waiting until night makes it harder.</string>
     <string name="tip_20">Celebrate small wins: one finished subject is progress.</string>
+    <string name="onboarding_title">Welcome</string>
+    <string name="onboarding_sub">Tell us your name so we can personalize Class 8 for you.</string>
+    <string name="full_name">Full name</string>
+    <string name="faith_label">I am</string>
+    <string name="faith_muslim">Muslim</string>
+    <string name="faith_non_muslim">Non-Muslim</string>
+    <string name="continue_btn">Continue</string>
+    <string name="greeting_named">Ready for Class 8, %1$s?</string>
+    <string name="name_required">Please enter your full name</string>
 </resources>
+

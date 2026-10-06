@@ -1,13 +1,18 @@
 package com.endroid.class8homework
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.Window
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +22,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.textfield.TextInputEditText
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import kotlinx.coroutines.launch
@@ -27,10 +33,12 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private lateinit var repo: HomeworkRepository
     private lateinit var aiRepo: AiRepository
+    private lateinit var profile: UserProfile
     private lateinit var content: FrameLayout
     private lateinit var bottomNav: BottomNavigationView
 
@@ -76,16 +84,12 @@ class MainActivity : AppCompatActivity() {
     private val chatUi = mutableListOf<ChatAdapter.Item>()
     private var aiBusy = false
 
-    private val tips by lazy {
-        (1..20).mapNotNull { i ->
-            val id = resources.getIdentifier("tip_$i", "string", packageName)
-            if (id != 0) getString(id) else null
-        }
-    }
+    private val tipPrefs by lazy { getSharedPreferences("tips", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        profile = UserProfile(this)
         repo = HomeworkRepository(this)
         aiRepo = AiRepository()
         markwon = Markwon.builder(this)
@@ -116,32 +120,57 @@ class MainActivity : AppCompatActivity() {
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> {
-                    showMainPanel("home")
-                    true
-                }
-                R.id.nav_homework -> {
-                    showMainPanel("homework")
-                    true
-                }
-                R.id.nav_more -> {
-                    showMainPanel("more")
-                    true
-                }
+                R.id.nav_home -> { showMainPanel("home"); true }
+                R.id.nav_homework -> { showMainPanel("homework"); true }
+                R.id.nav_more -> { showMainPanel("more"); true }
                 else -> false
             }
         }
 
         applyGreeting()
-        if (tips.isNotEmpty()) {
-            tipText.text = tips[LocalDate.now().dayOfYear % tips.size]
+        applyTip()
+        updateSubjectStatsPlaceholder()
+
+        if (!profile.isComplete) {
+            showOnboarding()
+        } else {
+            seedWelcomeChat()
+            repo.loadCache()?.let { renderLoaded(it, fromCache = true) }
+            refresh()
         }
-        statTotalCount.text = Subjects.ALL.size.toString()
+    }
 
-        seedWelcomeChat()
+    private fun showOnboarding() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setCancelable(false)
+        val view = layoutInflater.inflate(R.layout.dialog_onboarding, null)
+        dialog.setContentView(view)
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.92).toInt(),
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
 
-        repo.loadCache()?.let { renderLoaded(it, fromCache = true) }
-        refresh()
+        val inputName = view.findViewById<TextInputEditText>(R.id.inputName)
+        val spinner = view.findViewById<Spinner>(R.id.spinnerFaith)
+        val options = listOf(getString(R.string.faith_muslim), getString(R.string.faith_non_muslim))
+        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, options)
+
+        view.findViewById<MaterialButton>(R.id.btnSaveProfile).setOnClickListener {
+            val name = inputName.text?.toString().orEmpty().trim()
+            if (name.isBlank()) {
+                Toast.makeText(this, R.string.name_required, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            profile.fullName = name
+            profile.isMuslim = spinner.selectedItemPosition == 0
+            dialog.dismiss()
+            applyGreeting()
+            seedWelcomeChat()
+            repo.loadCache()?.let { renderLoaded(it, fromCache = true) }
+            refresh()
+        }
+        dialog.show()
     }
 
     private fun showMainPanel(name: String) {
@@ -165,10 +194,7 @@ class MainActivity : AppCompatActivity() {
         tipText = v.findViewById(R.id.tipText)
         btnOpenHomework = v.findViewById(R.id.btnOpenHomework)
         btnRefresh = v.findViewById(R.id.btnRefresh)
-
-        btnOpenHomework.setOnClickListener {
-            bottomNav.selectedItemId = R.id.nav_homework
-        }
+        btnOpenHomework.setOnClickListener { bottomNav.selectedItemId = R.id.nav_homework }
         btnRefresh.setOnClickListener { refresh() }
     }
 
@@ -180,7 +206,6 @@ class MainActivity : AppCompatActivity() {
         emptyMessage = v.findViewById(R.id.emptyMessage)
         hwStatusChip = v.findViewById(R.id.hwStatusChip)
         retryBtn = v.findViewById(R.id.retryBtn)
-
         list.layoutManager = LinearLayoutManager(this)
         list.adapter = adapter
         swipe.setColorSchemeResources(R.color.seed)
@@ -201,10 +226,8 @@ class MainActivity : AppCompatActivity() {
         aiBack = v.findViewById(R.id.aiBack)
         aiClear = v.findViewById(R.id.aiClear)
         aiWebSearch = v.findViewById(R.id.aiWebSearch)
-
         aiList.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         aiList.adapter = chatAdapter
-
         aiBack.setOnClickListener {
             showMainPanel("more")
             bottomNav.selectedItemId = R.id.nav_more
@@ -218,8 +241,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun seedWelcomeChat() {
+        val name = profile.firstName()
+        val welcome = if (name.isBlank()) {
+            getString(R.string.ai_welcome)
+        } else {
+            "Assalam-o-Alaikum, **$name**! I'm your Class 8 study helper. Ask in English or Urdu — math, science, grammar, or anything from your books."
+        }
         chatUi.clear()
-        chatUi.add(ChatAdapter.Item(fromUser = false, text = getString(R.string.ai_welcome)))
+        chatUi.add(ChatAdapter.Item(fromUser = false, text = welcome))
         chatAdapter.submit(chatUi.toList())
     }
 
@@ -238,9 +267,8 @@ class MainActivity : AppCompatActivity() {
         aiBusy = true
         aiSend.isEnabled = false
         lifecycleScope.launch {
-            val hist = AiRepository.CLASS8_PRIMER + chatHistory.dropLast(1)
+            val hist = AiRepository.class8Primer(profile.firstName()) + chatHistory.dropLast(1)
             val result = aiRepo.ask(text, hist, aiWebSearch.isChecked)
-            // remove thinking
             if (chatUi.isNotEmpty() && chatUi.last().text == getString(R.string.ai_thinking)) {
                 chatUi.removeAt(chatUi.lastIndex)
             }
@@ -256,7 +284,6 @@ class MainActivity : AppCompatActivity() {
                             text = getString(R.string.ai_error) + "\n\n" + (it.message ?: "")
                         )
                     )
-                    // roll back last user history on hard fail so retries are clean
                     if (chatHistory.isNotEmpty() && chatHistory.last().role == "user") {
                         chatHistory.removeAt(chatHistory.lastIndex)
                     }
@@ -282,7 +309,34 @@ class MainActivity : AppCompatActivity() {
         greetingDate.text = LocalDate.now().format(
             DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())
         )
-        greetingSub.setText(R.string.greeting_sub)
+        val name = profile.firstName()
+        greetingSub.text = if (name.isBlank()) {
+            getString(R.string.greeting_sub)
+        } else {
+            getString(R.string.greeting_named, name)
+        }
+    }
+
+    /** Rotate study tip every 2 hours */
+    private fun applyTip() {
+        val tips = (1..20).mapNotNull { i ->
+            val id = resources.getIdentifier("tip_$i", "string", packageName)
+            if (id != 0) getString(id) else null
+        }
+        if (tips.isEmpty()) return
+        val now = System.currentTimeMillis()
+        val lastAt = tipPrefs.getLong("tip_at", 0L)
+        var idx = tipPrefs.getInt("tip_idx", 0)
+        if (now - lastAt >= TimeUnit.HOURS.toMillis(2)) {
+            idx = (idx + 1) % tips.size
+            tipPrefs.edit().putInt("tip_idx", idx).putLong("tip_at", now).apply()
+        }
+        tipText.text = tips[idx % tips.size]
+    }
+
+    private fun updateSubjectStatsPlaceholder() {
+        val total = profile.visibleSubjects().size.coerceAtLeast(1)
+        statTotalCount.text = total.toString()
     }
 
     private fun refresh() {
@@ -312,13 +366,12 @@ class MainActivity : AppCompatActivity() {
         emptyState.visibility = View.GONE
         list.visibility = View.VISIBLE
 
-        val rows = Subjects.ALL.map { info ->
-            SubjectAdapter.Row(info, data.entries[info.key])
-        }
+        val visible = profile.visibleSubjects()
+        val rows = visible.map { info -> SubjectAdapter.Row(info, data.entries[info.key]) }
         adapter.submit(rows)
 
-        val due = data.entries.size
-        val total = Subjects.ALL.size
+        val due = visible.count { data.entries.containsKey(it.key) }
+        val total = visible.size
         statDueCount.text = due.toString()
         statTotalCount.text = total.toString()
 
@@ -344,9 +397,9 @@ class MainActivity : AppCompatActivity() {
         emptyState.visibility = View.VISIBLE
         emptyTitle.text = getString(R.string.no_homework)
         emptyMessage.text = message
-
+        val total = profile.visibleSubjects().size
         statDueCount.text = "0"
-        statTotalCount.text = Subjects.ALL.size.toString()
+        statTotalCount.text = total.toString()
         summaryLine.text = getString(R.string.nothing_due)
         summaryHint.text = message
         setStatus(null)

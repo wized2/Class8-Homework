@@ -12,9 +12,8 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Client for https://ai.endroid.workers.dev/
- *
- * POST JSON: { "prompt": String, "history": [{role, content}], "web_search": Boolean }
- * Response: text/plain (Markdown)
+ * POST: { prompt, history: [{role, content}], web_search }
+ * Response: text/plain Markdown (may include $math$)
  */
 class AiRepository {
     private val client = OkHttpClient.Builder()
@@ -26,27 +25,36 @@ class AiRepository {
     companion object {
         const val ENDPOINT = "https://ai.endroid.workers.dev/"
 
-        /** Injected as conversation priming so answers fit Class 8 (worker has its own system prompt). */
-        val CLASS8_PRIMER = listOf(
-            ChatMessage(
-                role = "user",
-                content = """
-You are now in **Class 8 Study Helper** mode for this chat.
+        fun class8Primer(studentName: String): List<ChatMessage> {
+            val who = if (studentName.isBlank()) "the student" else studentName
+            return listOf(
+                ChatMessage(
+                    role = "user",
+                    content = """
+You are in **Class 8 Study Helper** mode.
+Student name: **$who** — address them by name sometimes.
+
 Rules:
-- Teach like a kind, patient Class 8 teacher (age ~13–14).
-- Prefer **simple English** and/or **Urdu (اردو)** — match the student's language; mix both when it helps.
-- Use **Markdown** (headings, bold, lists, steps). Never raw HTML.
-- Explain step-by-step; give short examples from a Class 8 level (math, science, English, Urdu, Islamiat, etc.).
-- Encourage the student; never shame mistakes.
-- If a question is above Class 8, still help gently but say it may be advanced.
-Reply with one short confirmation that you are ready as Class 8 helper (Urdu + English is fine).
-                """.trim()
-            ),
-            ChatMessage(
-                role = "model",
-                content = "Theek hai! Main aapka Class 8 study helper hoon. English ya Urdu mein poochhein — math, science, grammar, kuch bhi. Let's learn together!"
+- Kind, patient Class 8 teacher (ages ~13–14).
+- Answer in **simple English** and/or **Urdu (اردو)**; match the student's language.
+- Use **Markdown**. For math use clear notation; prefer simple forms like a₉, x², or $a_9$, $x^2$ for formulas.
+- Step-by-step explanations with Class 8 level examples.
+- Encourage; never shame mistakes.
+- If above Class 8, still help gently and note it may be advanced.
+
+Reply with one short confirmation that you are ready (can greet $who$).
+                    """.trim()
+                ),
+                ChatMessage(
+                    role = "model",
+                    content = if (studentName.isBlank()) {
+                        "Theek hai! Main aapka Class 8 study helper hoon. English ya Urdu mein poochhein."
+                    } else {
+                        "Theek hai, $studentName! Main aapka Class 8 study helper hoon. English ya Urdu mein poochhein — math, science, grammar, kuch bhi."
+                    }
+                )
             )
-        )
+        }
     }
 
     data class ChatMessage(val role: String, val content: String)
@@ -76,9 +84,7 @@ Reply with one short confirmation that you are ready as Class 8 helper (Urdu + E
             client.newCall(req).execute().use { resp ->
                 val text = resp.body?.string().orEmpty().trim()
                 if (!resp.isSuccessful) {
-                    return@withContext Result.failure(
-                        Exception(text.ifBlank { "HTTP ${resp.code}" })
-                    )
+                    return@withContext Result.failure(Exception(text.ifBlank { "HTTP ${resp.code}" }))
                 }
                 if (text.isBlank()) {
                     return@withContext Result.failure(Exception("Empty response"))

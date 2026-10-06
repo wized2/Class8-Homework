@@ -228,23 +228,27 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnOpenHomework"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
+                android:maxLines="1"
                 android:text="@string/open_homework"
                 app:icon="@drawable/ic_book"
-                app:iconGravity="textStart" />
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRefresh"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
+                android:maxLines="1"
                 android:text="@string/refresh"
                 app:icon="@drawable/ic_refresh"
-                app:iconGravity="textStart" />
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
         </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
