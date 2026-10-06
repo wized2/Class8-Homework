@@ -10,7 +10,7 @@
     <string name="ai_send">Send</string>
     <string name="ai_thinking">Thinking…</string>
     <string name="ai_error">Could not reach AI Helper. Check internet and try again.</string>
-    <string name="ai_welcome">Assalam-o-Alaikum! I'm your Class 8 study helper. Ask in **English** or **Urdu** — math, science, grammar, or anything from your books. 📚</string>
+    <string name="ai_welcome">Assalam-o-Alaikum! I\'m your Class 8 study helper. Ask in English or Urdu — math, science, grammar, or anything from your books.</string>
     <string name="more_title">More</string>
     <string name="web_search_toggle">Web search</string>
     <string name="clear_chat">Clear chat</string>
@@ -40,7 +40,7 @@
     <string name="nothing_due">Nothing due — enjoy your free time!</string>
     <string name="tip_1">Start with the shortest tasks to build momentum.</string>
     <string name="tip_2">Put books and notes on the table before you begin.</string>
-    <string name="tip_3">A 25‑minute focus block beats endless scrolling.</string>
+    <string name="tip_3">A 25-minute focus block beats endless scrolling.</string>
     <string name="tip_4">Check page numbers carefully before you open the book.</string>
     <string name="tip_5">Finish science or math when your mind is freshest.</string>
     <string name="tip_6">Read the question twice before you start writing.</string>
@@ -52,10 +52,10 @@
     <string name="tip_12">Use a checklist and tick subjects as you finish them.</string>
     <string name="tip_13">Explain a tough idea out loud as if teaching a friend.</string>
     <string name="tip_14">Neat handwriting slows you just enough to think clearly.</string>
-    <string name="tip_15">End with a 3‑minute recap of what you learned today.</string>
+    <string name="tip_15">End with a 3-minute recap of what you learned today.</string>
     <string name="tip_16">Hard subject first or last — pick one rule and stick to it.</string>
     <string name="tip_17">Stretch for 60 seconds between subjects to reset your brain.</string>
-    <string name="tip_18">Don’t copy blindly; rewrite in your own words to remember.</string>
+    <string name="tip_18">Don\'t copy blindly; rewrite in your own words to remember.</string>
     <string name="tip_19">Ask for help early — waiting until night makes it harder.</string>
     <string name="tip_20">Celebrate small wins: one finished subject is progress.</string>
 </resources>
