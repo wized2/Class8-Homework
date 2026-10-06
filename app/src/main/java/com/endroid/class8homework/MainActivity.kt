@@ -21,7 +21,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputEditText
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
@@ -77,7 +76,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var aiSend: ImageButton
     private lateinit var aiBack: ImageButton
     private lateinit var aiClear: ImageButton
-    private lateinit var aiWebSearch: MaterialSwitch
 
     private var lastData: HomeworkData? = null
     private val chatHistory = mutableListOf<AiRepository.ChatMessage>()
@@ -225,7 +223,6 @@ class MainActivity : AppCompatActivity() {
         aiSend = v.findViewById(R.id.aiSend)
         aiBack = v.findViewById(R.id.aiBack)
         aiClear = v.findViewById(R.id.aiClear)
-        aiWebSearch = v.findViewById(R.id.aiWebSearch)
         aiList.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         aiList.adapter = chatAdapter
         aiBack.setOnClickListener {
@@ -268,7 +265,7 @@ class MainActivity : AppCompatActivity() {
         aiSend.isEnabled = false
         lifecycleScope.launch {
             val hist = AiRepository.class8Primer(profile.firstName()) + chatHistory.dropLast(1)
-            val result = aiRepo.ask(text, hist, aiWebSearch.isChecked)
+            val result = aiRepo.ask(text, hist)
             if (chatUi.isNotEmpty() && chatUi.last().text == getString(R.string.ai_thinking)) {
                 chatUi.removeAt(chatUi.lastIndex)
             }

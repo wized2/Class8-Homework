@@ -56,15 +56,6 @@
             app:tint="@color/muted" />
     </LinearLayout>
 
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/aiWebSearch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:text="@string/web_search_toggle"
-        android:textColor="@color/ink"
-        android:textSize="13sp" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/aiList"
         android:layout_width="match_parent"

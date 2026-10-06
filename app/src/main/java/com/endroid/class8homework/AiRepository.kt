@@ -12,8 +12,8 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Client for https://ai.endroid.workers.dev/
- * POST: { prompt, history: [{role, content}], web_search }
- * Response: text/plain Markdown (may include $math$)
+ * POST: { prompt, history: [{role, content}] }
+ * Response: text/plain Markdown
  */
 class AiRepository {
     private val client = OkHttpClient.Builder()
@@ -61,8 +61,7 @@ Reply with one short confirmation that you are ready (can greet ${who}).
 
     suspend fun ask(
         prompt: String,
-        history: List<ChatMessage>,
-        webSearch: Boolean
+        history: List<ChatMessage>
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             val hist = JSONArray()
@@ -71,7 +70,6 @@ Reply with one short confirmation that you are ready (can greet ${who}).
             }
             val bodyJson = JSONObject()
                 .put("prompt", prompt)
-                .put("web_search", webSearch)
                 .put("history", hist)
                 .toString()
 
