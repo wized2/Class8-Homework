@@ -14,6 +14,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import io.noties.markwon.Markwon
+import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -67,7 +68,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         repo = HomeworkRepository(this)
-        markwon = Markwon.create(this)
+        markwon = Markwon.builder(this)
+            .usePlugin(SoftBreakAddsNewLinePlugin.create())
+            .build()
         adapter = SubjectAdapter(markwon)
 
         content = findViewById(R.id.content)

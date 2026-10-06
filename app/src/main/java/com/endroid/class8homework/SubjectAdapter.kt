@@ -54,7 +54,9 @@ class SubjectAdapter(
                 source.visibility = View.VISIBLE
                 source.text = e.source.replaceFirstChar { it.uppercase() }
                 body.alpha = 1f
-                markwon.setMarkdown(body, e.description.ifBlank { "—" })
+                body.setSingleLine(false)
+                body.maxLines = Integer.MAX_VALUE
+                markwon.setMarkdown(body, normalizeMd(e.description.ifBlank { "—" }))
 
                 val metaParts = mutableListOf<String>()
                 if (e.page.isNotBlank()) metaParts += "Page ${e.page}"
@@ -63,9 +65,17 @@ class SubjectAdapter(
                     meta.visibility = View.GONE
                 } else {
                     meta.visibility = View.VISIBLE
-                    markwon.setMarkdown(meta, metaParts.joinToString(" · "))
+                    meta.setSingleLine(false)
+                    meta.maxLines = Integer.MAX_VALUE
+                    markwon.setMarkdown(meta, normalizeMd(metaParts.joinToString(" · ")))
                 }
             }
         }
+    }
+
+    companion object {
+        /** Preserve author line breaks: CRLF → LF, keep single newlines as soft breaks. */
+        fun normalizeMd(raw: String): String =
+            raw.replace("\r\n", "\n").replace("\r", "\n").trimEnd()
     }
 }
