@@ -1,9 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Homework app: adaptive icon FOREGROUND (Google-style blue gradient).
+  108x108dp canvas. The artwork is centered and scaled (0.94) so it sits
+  inside the launcher safe zone and survives circle / squircle / square masks.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#4F46E5"
-        android:pathData="M28,30h52a6,6 0 0,1 6,6v40a6,6 0 0,1 -6,6H28a6,6 0 0,1 -6,-6V36a6,6 0 0,1 6,-6z"/>
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M36,44h36v4H36zM36,54h28v4H36zM36,64h20v4H36z"/>
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:pivotX="0"
+        android:pivotY="0"
+        android:scaleX="0.94"
+        android:scaleY="0.94"
+        android:translateX="-3.81"
+        android:translateY="3.62">
+
+        <!-- Notebook cover (back) -->
+        <path android:pathData="M41,27 H61 A8,8 0 0 1 69,35 V71 A8,8 0 0 1 61,79 H41 A8,8 0 0 1 33,71 V35 A8,8 0 0 1 41,27 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="33"
+                    android:startY="0"
+                    android:endX="72"
+                    android:endY="0">
+                    <item android:offset="0" android:color="#FF3B7DF6" />
+                    <item android:offset="1" android:color="#FF5BA8FF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Front sheet: violet tint on top fading into light blue -->
+        <path android:pathData="M48,38 H70 A7,7 0 0 1 77,45 V72 A7,7 0 0 1 70,79 H48 A7,7 0 0 1 41,72 V45 A7,7 0 0 1 48,38 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="0"
+                    android:startY="38"
+                    android:endX="0"
+                    android:endY="80">
+                    <item android:offset="0" android:color="#FF94A9FB" />
+                    <item android:offset="0.45" android:color="#FF78B8FF" />
+                    <item android:offset="1" android:color="#FF76B9FF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Lighter edge on the right side of the sheet -->
+        <path android:pathData="M48,38 H70 A7,7 0 0 1 77,45 V72 A7,7 0 0 1 70,79 H48 A7,7 0 0 1 41,72 V45 A7,7 0 0 1 48,38 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="41"
+                    android:startY="0"
+                    android:endX="77"
+                    android:endY="0">
+                    <item android:offset="0" android:color="#00FFFFFF" />
+                    <item android:offset="0.7" android:color="#009ED0FF" />
+                    <item android:offset="1" android:color="#8CA9D6FF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Checklist: check marks -->
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M46,48.2 l2,2.2 l3.6,-4.2 M46,58.2 l2,2.2 l3.6,-4.2" />
+        <!-- Open task ring -->
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#D9FFFFFF"
+            android:strokeWidth="1.8"
+            android:pathData="M51.5,68.4 a3.1,3.1 0 1,0 -6.2,0 a3.1,3.1 0 1,0 6.2,0" />
+        <!-- Checklist: lines -->
+        <path
+            android:fillColor="#E6FFFFFF"
+            android:pathData="M57.1,47 H67.9 a1.6,1.6 0 0 1 0,3.2 H57.1 a1.6,1.6 0 0 1 0,-3.2 Z M57.1,57 H64.4 a1.6,1.6 0 0 1 0,3.2 H57.1 a1.6,1.6 0 0 1 0,-3.2 Z" />
+        <path
+            android:fillColor="#99FFFFFF"
+            android:pathData="M57.1,67 H61.9 a1.6,1.6 0 0 1 0,3.2 H57.1 a1.6,1.6 0 0 1 0,-3.2 Z" />
+
+        <!-- Pencil -->
+        <group
+            android:pivotX="0"
+            android:pivotY="0"
+            android:translateX="70"
+            android:translateY="64"
+            android:rotation="-45">
+            <path android:fillColor="#FFB9C6FF" android:pathData="M-23,0 L-15,-4.4 V4.4 Z" />
+            <path android:fillColor="#FF6E86F0" android:pathData="M-23,0 L-19.8,-1.8 V1.8 Z" />
+            <path android:pathData="M-15,-4.4 H15 V4.4 H-15 Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient
+                        android:type="linear"
+                        android:startX="0"
+                        android:startY="-4.4"
+                        android:endX="0"
+                        android:endY="4.4">
+                        <item android:offset="0" android:color="#FFE6EFFF" />
+                        <item android:offset="1" android:color="#FFA8C5FF" />
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <path android:fillColor="#FFA9BCF6" android:pathData="M15,-4.4 H18.6 V4.4 H15 Z" />
+            <path android:fillColor="#FF8FA6FA" android:pathData="M18.6,-4.4 H21 Q24,-4.4 24,-1.4 V1.4 Q24,4.4 21,4.4 H18.6 Z" />
+        </group>
+    </group>
 </vector>
