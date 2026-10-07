@@ -4,11 +4,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="10dp"
     app:cardBackgroundColor="@color/card"
     app:cardCornerRadius="18dp"
     app:cardElevation="0dp"
-    app:strokeColor="#E2E8F0"
+    app:strokeColor="@color/line"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -27,7 +27,6 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@drawable/bg_icon">
-
                 <ImageView
                     android:id="@+id/icon"
                     android:layout_width="22dp"
@@ -74,5 +73,21 @@
             android:lineSpacingExtra="2dp"
             android:textColor="@color/muted"
             android:textSize="13sp" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp">
+            <ImageButton
+                android:id="@+id/btnCopy"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="end|bottom"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/copy"
+                android:padding="6dp"
+                android:src="@drawable/ic_copy"
+                android:visibility="gone" />
+        </FrameLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -1,10 +1,15 @@
 package com.endroid.class8homework
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import io.noties.markwon.Markwon
 
@@ -31,7 +36,6 @@ class SubjectAdapter(
     }
 
     override fun getItemCount() = items.size
-
     override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(items[position])
 
     class VH(itemView: View, private val markwon: Markwon) : RecyclerView.ViewHolder(itemView) {
@@ -40,6 +44,7 @@ class SubjectAdapter(
         private val source: TextView = itemView.findViewById(R.id.source)
         private val body: TextView = itemView.findViewById(R.id.body)
         private val meta: TextView = itemView.findViewById(R.id.meta)
+        private val btnCopy: ImageButton = itemView.findViewById(R.id.btnCopy)
 
         fun bind(row: Row) {
             icon.setImageResource(row.info.iconRes)
@@ -50,6 +55,7 @@ class SubjectAdapter(
                 body.alpha = 0.55f
                 body.text = itemView.context.getString(R.string.no_subject)
                 meta.visibility = View.GONE
+                btnCopy.visibility = View.GONE
             } else {
                 source.visibility = View.VISIBLE
                 source.text = e.source.replaceFirstChar { it.uppercase() }
@@ -65,17 +71,26 @@ class SubjectAdapter(
                     meta.visibility = View.GONE
                 } else {
                     meta.visibility = View.VISIBLE
-                    meta.setSingleLine(false)
-                    meta.maxLines = Integer.MAX_VALUE
                     markwon.setMarkdown(meta, normalizeMd(metaParts.joinToString(" · ")))
+                }
+
+                btnCopy.visibility = View.VISIBLE
+                btnCopy.setOnClickListener {
+                    val text = buildString {
+                        append(row.info.label)
+                        append('\n')
+                        if (e.description.isNotBlank()) append(e.description.trim()).append('\n')
+                        if (e.page.isNotBlank()) append("Page: ").append(e.page).append('\n')
+                        if (e.notes.isNotBlank()) append(e.notes.trim())
+                    }.trim()
+                    val cm = itemView.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    cm.setPrimaryClip(ClipData.newPlainText("homework", text))
+                    Toast.makeText(itemView.context, R.string.copied, Toast.LENGTH_SHORT).show()
                 }
             }
         }
-    }
 
-    companion object {
-        /** Preserve author line breaks: CRLF → LF, keep single newlines as soft breaks. */
-        fun normalizeMd(raw: String): String =
-            raw.replace("\r\n", "\n").replace("\r", "\n").trimEnd()
+        private fun normalizeMd(s: String): String =
+            s.replace("\r\n", "\n").replace('\r', '\n')
     }
 }

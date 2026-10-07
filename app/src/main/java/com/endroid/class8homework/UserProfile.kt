@@ -1,6 +1,7 @@
 package com.endroid.class8homework
 
 import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
 
 class UserProfile(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("user_profile", Context.MODE_PRIVATE)
@@ -17,6 +18,11 @@ class UserProfile(context: Context) {
             else prefs.edit().putBoolean(KEY_MUSLIM, v).apply()
         }
 
+    /** system | light | dark */
+    var themeMode: String
+        get() = prefs.getString(KEY_THEME, "system").orEmpty().ifBlank { "system" }
+        set(v) = prefs.edit().putString(KEY_THEME, v).apply()
+
     val isComplete: Boolean
         get() = fullName.isNotBlank() && isMuslim != null
 
@@ -26,20 +32,30 @@ class UserProfile(context: Context) {
         return n.split("\\s+".toRegex()).first()
     }
 
-    /** Subjects visible for this profile */
     fun visibleSubjects(): List<Subjects.Info> {
         val muslim = isMuslim
         return Subjects.ALL.filter { info ->
             when (info.key) {
-                "ethics" -> muslim == false // only non-Muslims
-                "islamiat", "tarjama-tul-quran" -> muslim != false // Muslims + unset default show
+                "ethics" -> muslim == false
+                "islamiat", "tarjama-tul-quran" -> muslim != false
                 else -> true
             }
         }
     }
 
+    fun applyTheme() {
+        AppCompatDelegate.setDefaultNightMode(
+            when (themeMode) {
+                "light" -> AppCompatDelegate.MODE_NIGHT_NO
+                "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+                else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            }
+        )
+    }
+
     companion object {
         private const val KEY_NAME = "full_name"
         private const val KEY_MUSLIM = "is_muslim"
+        private const val KEY_THEME = "theme_mode"
     }
 }

@@ -67,5 +67,17 @@
     <string name="greeting_named">Ready for Class 8, %1$s?</string>
     <string name="name_required">Please enter your full name</string>
     <string name="designed_by">Designed by Mudasir Wazir</string>
+
+    <string name="copy">Copy</string>
+    <string name="copied">Copied</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_sub">Name, religion, theme</string>
+    <string name="theme_label">Theme</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="save_settings">Save</string>
+    <string name="settings_saved">Settings saved</string>
+    <string name="answer_label">Answer</string>
 </resources>
 

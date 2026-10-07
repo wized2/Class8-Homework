@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var homeworkView: View
     private lateinit var moreView: View
     private lateinit var aiView: View
+    private lateinit var settingsView: View
 
     private lateinit var greetingIcon: ImageView
     private lateinit var greetingTitle: TextView
@@ -77,17 +79,25 @@ class MainActivity : AppCompatActivity() {
     private lateinit var aiBack: ImageButton
     private lateinit var aiClear: ImageButton
 
+    private lateinit var settingsName: TextInputEditText
+    private lateinit var settingsFaith: Spinner
+    private lateinit var settingsTheme: Spinner
+
     private var lastData: HomeworkData? = null
     private val chatHistory = mutableListOf<AiRepository.ChatMessage>()
     private val chatUi = mutableListOf<ChatAdapter.Item>()
     private var aiBusy = false
 
+    /** home | homework | more | ai | settings */
+    private var currentPanel = "home"
+
     private val tipPrefs by lazy { getSharedPreferences("tips", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        profile = UserProfile(this)
+        profile.applyTheme()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        profile = UserProfile(this)
         repo = HomeworkRepository(this)
         aiRepo = AiRepository()
         markwon = Markwon.builder(this)
@@ -104,16 +114,19 @@ class MainActivity : AppCompatActivity() {
         homeworkView = inflater.inflate(R.layout.panel_homework, content, false)
         moreView = inflater.inflate(R.layout.panel_more, content, false)
         aiView = inflater.inflate(R.layout.panel_ai, content, false)
+        settingsView = inflater.inflate(R.layout.panel_settings, content, false)
 
         bindHome(homeView)
         bindHomework(homeworkView)
         bindMore(moreView)
         bindAi(aiView)
+        bindSettings(settingsView)
 
         content.addView(homeView)
         content.addView(homeworkView)
         content.addView(moreView)
         content.addView(aiView)
+        content.addView(settingsView)
         showMainPanel("home")
 
         bottomNav.setOnItemSelectedListener { item ->
@@ -124,6 +137,26 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when (currentPanel) {
+                    "ai", "settings" -> {
+                        showMainPanel("more")
+                        bottomNav.selectedItemId = R.id.nav_more
+                    }
+                    "homework", "more" -> {
+                        showMainPanel("home")
+                        bottomNav.selectedItemId = R.id.nav_home
+                    }
+                    else -> {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                        isEnabled = true
+                    }
+                }
+            }
+        })
 
         applyGreeting()
         applyTip()
@@ -172,11 +205,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showMainPanel(name: String) {
+        currentPanel = name
         homeView.visibility = if (name == "home") View.VISIBLE else View.GONE
         homeworkView.visibility = if (name == "homework") View.VISIBLE else View.GONE
         moreView.visibility = if (name == "more") View.VISIBLE else View.GONE
         aiView.visibility = if (name == "ai") View.VISIBLE else View.GONE
-        bottomNav.visibility = if (name == "ai") View.GONE else View.VISIBLE
+        settingsView.visibility = if (name == "settings") View.VISIBLE else View.GONE
+        bottomNav.visibility = if (name == "ai" || name == "settings") View.GONE else View.VISIBLE
     }
 
     private fun bindHome(v: View) {
@@ -215,6 +250,10 @@ class MainActivity : AppCompatActivity() {
         v.findViewById<MaterialCardView>(R.id.cardAiHelper).setOnClickListener {
             showMainPanel("ai")
         }
+        v.findViewById<MaterialCardView>(R.id.cardSettings).setOnClickListener {
+            loadSettingsForm()
+            showMainPanel("settings")
+        }
     }
 
     private fun bindAi(v: View) {
@@ -235,6 +274,57 @@ class MainActivity : AppCompatActivity() {
             seedWelcomeChat()
         }
         aiSend.setOnClickListener { sendAi() }
+    }
+
+    private fun bindSettings(v: View) {
+        settingsName = v.findViewById(R.id.settingsName)
+        settingsFaith = v.findViewById(R.id.settingsFaith)
+        settingsTheme = v.findViewById(R.id.settingsTheme)
+        v.findViewById<ImageButton>(R.id.settingsBack).setOnClickListener {
+            showMainPanel("more")
+            bottomNav.selectedItemId = R.id.nav_more
+        }
+        val faithOpts = listOf(getString(R.string.faith_muslim), getString(R.string.faith_non_muslim))
+        settingsFaith.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, faithOpts)
+        val themeOpts = listOf(
+            getString(R.string.theme_system),
+            getString(R.string.theme_light),
+            getString(R.string.theme_dark)
+        )
+        settingsTheme.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, themeOpts)
+
+        v.findViewById<MaterialButton>(R.id.settingsSave).setOnClickListener {
+            val name = settingsName.text?.toString().orEmpty().trim()
+            if (name.isBlank()) {
+                Toast.makeText(this, R.string.name_required, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            profile.fullName = name
+            profile.isMuslim = settingsFaith.selectedItemPosition == 0
+            profile.themeMode = when (settingsTheme.selectedItemPosition) {
+                1 -> "light"
+                2 -> "dark"
+                else -> "system"
+            }
+            profile.applyTheme()
+            applyGreeting()
+            lastData?.let { renderLoaded(it, fromCache = true) }
+            Toast.makeText(this, R.string.settings_saved, Toast.LENGTH_SHORT).show()
+            showMainPanel("more")
+            bottomNav.selectedItemId = R.id.nav_more
+        }
+    }
+
+    private fun loadSettingsForm() {
+        settingsName.setText(profile.fullName)
+        settingsFaith.setSelection(if (profile.isMuslim != false) 0 else 1)
+        settingsTheme.setSelection(
+            when (profile.themeMode) {
+                "light" -> 1
+                "dark" -> 2
+                else -> 0
+            }
+        )
     }
 
     private fun seedWelcomeChat() {
@@ -314,7 +404,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Rotate study tip every 2 hours */
     private fun applyTip() {
         val tips = (1..20).mapNotNull { i ->
             val id = resources.getIdentifier("tip_$i", "string", packageName)

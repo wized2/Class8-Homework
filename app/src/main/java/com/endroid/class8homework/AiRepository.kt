@@ -41,6 +41,16 @@ Rules:
 - Step-by-step explanations with Class 8 level examples.
 - Encourage; never shame mistakes.
 - If above Class 8, still help gently and note it may be advanced.
+- When making MCQs, use this exact shape so the app can render them:
+  1. Question text
+  A) option
+  B) option
+  C) option
+  D) option
+  Answer: B
+- For short Q&A drills use:
+  Q: ...
+  A: ...
 
 Reply with one short confirmation that you are ready (can greet ${who}).
                     """.trim()
