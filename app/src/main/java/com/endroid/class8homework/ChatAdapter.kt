@@ -1,6 +1,5 @@
 package com.endroid.class8homework
 
-import android.graphics.Color
 import android.graphics.Typeface
 import android.util.TypedValue
 import android.view.Gravity
@@ -48,9 +47,14 @@ class ChatAdapter(
         }
 
         fun bind(item: Item) {
+            val ctx = itemView.context
             val lp = bubble.layoutParams as FrameLayout.LayoutParams
             structured.removeAllViews()
             structured.visibility = View.GONE
+
+            chatText.setSingleLine(false)
+            chatText.maxLines = Integer.MAX_VALUE
+            chatText.ellipsize = null
 
             if (item.fromUser) {
                 lp.gravity = Gravity.END
@@ -58,33 +62,34 @@ class ChatAdapter(
                 bubble.setBackgroundResource(R.drawable.bg_chip)
                 bubble.setPadding(dp(14), dp(10), dp(14), dp(10))
                 chatText.visibility = View.VISIBLE
-                chatText.setTextColor(ContextCompat.getColor(itemView.context, R.color.seed_dark))
+                chatText.setTextColor(ContextCompat.getColor(ctx, R.color.seed_dark))
                 chatText.typeface = Typeface.DEFAULT
                 chatText.text = item.text
             } else {
                 lp.gravity = Gravity.START
                 lp.width = ViewGroup.LayoutParams.MATCH_PARENT
-                bubble.setBackgroundColor(Color.TRANSPARENT)
+                bubble.background = null
                 bubble.setPadding(dp(4), dp(8), dp(4), dp(8))
-                chatText.setTextColor(ContextCompat.getColor(itemView.context, R.color.ink))
+                chatText.setTextColor(ContextCompat.getColor(ctx, R.color.ink))
                 chatText.typeface = serif ?: Typeface.SERIF
 
                 val enhanced = MathMarkdown.enhance(item.text)
                 val parsed = StructuredAi.parse(enhanced)
 
-                if (parsed.leadMarkdown.isNotBlank()) {
-                    chatText.visibility = View.VISIBLE
-                    markwon.setMarkdown(chatText, parsed.leadMarkdown)
-                } else if (parsed.mcqs.isEmpty() && parsed.qas.isEmpty()) {
-                    chatText.visibility = View.VISIBLE
-                    markwon.setMarkdown(chatText, enhanced)
-                } else {
-                    chatText.visibility = View.GONE
+                // Always show full prose (never drop body)
+                chatText.visibility = View.VISIBLE
+                val body = when {
+                    parsed.mcqs.isNotEmpty() || parsed.qas.isNotEmpty() ->
+                        parsed.leadMarkdown.ifBlank { enhanced }
+                    else -> enhanced
                 }
+                markwon.setMarkdown(chatText, body)
 
                 if (parsed.mcqs.isNotEmpty()) {
                     structured.visibility = View.VISIBLE
-                    parsed.mcqs.forEachIndexed { idx, mcq -> structured.addView(buildMcqCard(mcq, idx + 1)) }
+                    parsed.mcqs.forEachIndexed { idx, mcq ->
+                        structured.addView(buildMcqCard(mcq, idx + 1))
+                    }
                 } else if (parsed.qas.isNotEmpty()) {
                     structured.visibility = View.VISIBLE
                     parsed.qas.forEach { structured.addView(buildQaCard(it)) }
@@ -106,34 +111,31 @@ class ChatAdapter(
                 mlp.topMargin = dp(10)
                 layoutParams = mlp
             }
-            val q = TextView(ctx).apply {
+            card.addView(TextView(ctx).apply {
                 text = "Q$num. ${mcq.question}"
                 setTextColor(ContextCompat.getColor(ctx, R.color.ink))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
                 typeface = Typeface.DEFAULT_BOLD
-            }
-            card.addView(q)
+            })
             val inflater = LayoutInflater.from(ctx)
             for ((key, text) in mcq.options) {
                 val row = inflater.inflate(R.layout.item_mcq_option, card, false)
                 row.findViewById<TextView>(R.id.optKey).text = key
                 row.findViewById<TextView>(R.id.optText).text = text
-                val isAns = mcq.answer?.uppercase()?.startsWith(key) == true ||
-                    mcq.answer?.uppercase()?.contains(key) == true
-                if (isAns) {
-                    row.setBackgroundResource(R.drawable.bg_chip)
-                }
+                val isAns = mcq.answer?.uppercase()?.let {
+                    it.startsWith(key) || it.contains(key)
+                } == true
+                if (isAns) row.setBackgroundResource(R.drawable.bg_chip)
                 card.addView(row)
             }
             if (!mcq.answer.isNullOrBlank()) {
-                val a = TextView(ctx).apply {
+                card.addView(TextView(ctx).apply {
                     text = "${ctx.getString(R.string.answer_label)}: ${mcq.answer}"
                     setTextColor(ContextCompat.getColor(ctx, R.color.ok))
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                     setPadding(0, dp(8), 0, 0)
                     typeface = Typeface.DEFAULT_BOLD
-                }
-                card.addView(a)
+                })
             }
             return card
         }

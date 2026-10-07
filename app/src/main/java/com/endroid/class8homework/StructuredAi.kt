@@ -1,7 +1,8 @@
 package com.endroid.class8homework
 
 /**
- * Detect MCQ / Q&A blocks in AI Markdown so the chat UI can render them as cards.
+ * Detect MCQ / Q&A blocks only when clearly present (options A/B/…).
+ * Never strip normal numbered solution steps like "1. Start with…".
  */
 object StructuredAi {
 
@@ -24,15 +25,18 @@ object StructuredAi {
 
     private val optLine = Regex("""^\s*([A-Da-d])[\.\)\-:\]]\s+(.+)\s*$""")
     private val qLine = Regex(
-        """^\s*(?:\*\*)?(?:Q(?:uestion)?\s*)?(\d+)[\.\:\)]\s*(.+?)(?:\*\*)?\s*$""",
+        """^\s*(?:\*\*)?(?:Q(?:uestion)?\s+)(\d+)[\.\:\)]\s*(.+?)(?:\*\*)?\s*$""",
         RegexOption.IGNORE_CASE
     )
+    private val qLineLoose = Regex(
+        """^\s*(?:\*\*)?(\d+)[\.\:\)]\s*(.+?)(?:\*\*)?\s*$"""
+    )
     private val answerLine = Regex(
-        """^\s*(?:\*\*)?(?:Answer|Ans|Correct)\s*[:\-]\s*([A-Da-d0-9].*?)\s*(?:\*\*)?\s*$""",
+        """^\s*(?:\*\*)?(?:Answer|Ans|Correct)\s*[:\-]\s*(.+?)\s*(?:\*\*)?\s*$""",
         RegexOption.IGNORE_CASE
     )
     private val qaPair = Regex(
-        """(?im)^\s*(?:\*\*)?(?:Q|Question)\s*[:\-]?\s*(.+?)\s*(?:\*\*)?\s*$\s*(?:\*\*)?(?:A|Answer)\s*[:\-]?\s*(.+?)\s*(?:\*\*)?\s*$"""
+        """(?im)^\s*(?:\*\*)?(?:Q|Question)\s*[:\-]\s*(.+?)\s*(?:\*\*)?\s*$\n\s*(?:\*\*)?(?:A|Answer)\s*[:\-]\s*(.+?)\s*(?:\*\*)?\s*$"""
     )
 
     fun parse(raw: String): Parsed {
@@ -40,51 +44,50 @@ object StructuredAi {
         val mcqs = mutableListOf<Mcq>()
         val lead = StringBuilder()
         var i = 0
-        var inMcqRegion = false
 
         while (i < lines.size) {
             val line = lines[i]
-            val qm = qLine.matchEntire(line)
+            val qm = qLine.matchEntire(line) ?: qLineLoose.matchEntire(line)
             if (qm != null) {
-                inMcqRegion = true
-                val qText = qm.groupValues[2].trim()
-                val opts = mutableListOf<Pair<String, String>>()
+                // Look ahead: only MCQ if we soon see at least two A/B/C options
+                val look = mutableListOf<Pair<String, String>>()
                 var ans: String? = null
-                i++
-                while (i < lines.size) {
-                    val l = lines[i]
+                var j = i + 1
+                var consumed = i + 1
+                while (j < lines.size && j < i + 12) {
+                    val l = lines[j]
                     val om = optLine.matchEntire(l)
                     val am = answerLine.matchEntire(l)
                     when {
-                        om != null -> opts += om.groupValues[1].uppercase() to om.groupValues[2].trim()
-                        am != null -> ans = am.groupValues[1].trim()
-                        l.isBlank() && opts.isNotEmpty() -> break
-                        qLine.matchEntire(l) != null -> break
-                        opts.isEmpty() && l.isNotBlank() && !l.startsWith("**") -> {
-                            // continuation of question
+                        om != null -> {
+                            look += om.groupValues[1].uppercase() to om.groupValues[2].trim()
+                            consumed = j + 1
                         }
-                        else -> if (opts.isNotEmpty()) break else { /* keep */ }
+                        am != null && look.isNotEmpty() -> {
+                            ans = am.groupValues[1].trim()
+                            consumed = j + 1
+                        }
+                        l.isBlank() -> { /* skip */ }
+                        look.isNotEmpty() -> break
+                        else -> break
                     }
-                    if (om != null || am != null) i++ else {
-                        if (opts.isNotEmpty()) break
-                        i++
-                    }
+                    j++
                 }
-                if (opts.size >= 2) {
-                    mcqs += Mcq(qText, opts, ans)
-                } else {
-                    lead.append(line).append('\n')
+                if (look.size >= 2) {
+                    mcqs += Mcq(qm.groupValues[2].trim(), look, ans)
+                    i = consumed
+                    continue
                 }
+                // Not an MCQ — keep numbered step as normal markdown
+                lead.append(line).append('\n')
+                i++
                 continue
             }
-            if (!inMcqRegion) lead.append(line).append('\n')
-            else if (line.isNotBlank() && answerLine.matchEntire(line) == null && optLine.matchEntire(line) == null) {
-                // trailing non-mcq after region — treat as lead only if no mcqs yet
-                if (mcqs.isEmpty()) lead.append(line).append('\n')
-            }
+            lead.append(line).append('\n')
             i++
         }
 
+        val text = lead.toString()
         val qas = mutableListOf<Qa>()
         if (mcqs.isEmpty()) {
             qaPair.findAll(raw).forEach { m ->
@@ -92,6 +95,13 @@ object StructuredAi {
             }
         }
 
-        return Parsed(lead.toString().trim(), mcqs, qas)
+        // If we extracted MCQs, lead is the prose around them; else full text
+        val leadOut = if (mcqs.isEmpty() && qas.isEmpty()) {
+            raw.trim()
+        } else {
+            text.trim()
+        }
+
+        return Parsed(leadOut, mcqs, qas)
     }
 }
