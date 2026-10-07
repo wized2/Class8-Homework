@@ -73,7 +73,7 @@ class ChatAdapter(
                 chatText.setTextColor(ContextCompat.getColor(ctx, R.color.ink))
                 chatText.typeface = serif ?: Typeface.SERIF
 
-                val enhanced = MathMarkdown.enhance(item.text)
+                val enhanced = MarkdownKit.prepare(item.text)
                 val parsed = StructuredAi.parse(enhanced)
 
                 // Always show full prose (never drop body)

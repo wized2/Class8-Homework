@@ -62,7 +62,7 @@ class SubjectAdapter(
                 body.alpha = 1f
                 body.setSingleLine(false)
                 body.maxLines = Integer.MAX_VALUE
-                markwon.setMarkdown(body, normalizeMd(e.description.ifBlank { "—" }))
+                MarkdownKit.set(markwon, body, e.description.ifBlank { "—" })
 
                 val metaParts = mutableListOf<String>()
                 if (e.page.isNotBlank()) metaParts += "Page ${e.page}"
@@ -71,7 +71,7 @@ class SubjectAdapter(
                     meta.visibility = View.GONE
                 } else {
                     meta.visibility = View.VISIBLE
-                    markwon.setMarkdown(meta, normalizeMd(metaParts.joinToString(" · ")))
+                    MarkdownKit.set(markwon, meta, metaParts.joinToString(" · "))
                 }
 
                 btnCopy.visibility = View.VISIBLE
@@ -89,8 +89,5 @@ class SubjectAdapter(
                 }
             }
         }
-
-        private fun normalizeMd(s: String): String =
-            s.replace("\r\n", "\n").replace('\r', '\n')
     }
 }

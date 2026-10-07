@@ -24,7 +24,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
 import io.noties.markwon.Markwon
-import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -100,9 +99,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         repo = HomeworkRepository(this)
         aiRepo = AiRepository()
-        markwon = Markwon.builder(this)
-            .usePlugin(SoftBreakAddsNewLinePlugin.create())
-            .build()
+        markwon = MarkdownKit.create(this)
         adapter = SubjectAdapter(markwon)
         chatAdapter = ChatAdapter(markwon)
 
