@@ -8,15 +8,14 @@ import io.noties.markwon.ext.latex.JLatexMathPlugin
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.ext.tasklist.TaskListPlugin
-import io.noties.markwon.InlineParserPlugin
-import ru.noties.jlatexmath.JLatexMathDrawable
 
 /**
- * Shared Markwon with full Markdown + LaTeX ($...$, $$...$$).
+ * Shared Markwon with Markdown + LaTeX ($...$, $$...$$).
  */
 object MarkdownKit {
 
-    fun create(context: Context, textSizePx: Float = 15f * context.resources.displayMetrics.scaledDensity): Markwon {
+    fun create(context: Context): Markwon {
+        val textSizePx = 15f * context.resources.displayMetrics.scaledDensity
         return Markwon.builder(context)
             .usePlugin(SoftBreakAddsNewLinePlugin.create())
             .usePlugin(StrikethroughPlugin.create())
@@ -26,26 +25,23 @@ object MarkdownKit {
                 JLatexMathPlugin.create(textSizePx) { builder ->
                     builder.inlinesEnabled(true)
                     builder.blocksEnabled(true)
-                    builder.theme().apply {
-                        // readable on light & dark via TextView text color inheritance where possible
-                    }
                 }
             )
             .build()
     }
 
-    /** Normalize common LaTeX delimiters to forms Markwon/JLatexMath expects. */
+    /** Normalize common LaTeX delimiters for JLatexMath. */
     fun prepare(md: String): String {
         var s = md.replace("\r\n", "\n")
-        // \[ ... \] display
+        // \[ ... \] → $$ ... $$
         s = Regex("\\\\\\[([\\s\\S]+?)\\\\\\]").replace(s) { m ->
             "\n$$" + m.groupValues[1].trim() + "$$\n"
         }
-        // \( ... \) inline
+        // \( ... \) → $ ... $
         s = Regex("\\\\\\(([\\s\\S]+?)\\\\\\)").replace(s) { m ->
             "$" + m.groupValues[1].trim() + "$"
         }
-        // ```math ... ``` or ```latex ... ```
+        // ```math / latex / tex fences
         s = Regex("```(?:math|latex|tex)\\s*\\n([\\s\\S]+?)```", RegexOption.IGNORE_CASE).replace(s) { m ->
             "\n$$" + m.groupValues[1].trim() + "$$\n"
         }
