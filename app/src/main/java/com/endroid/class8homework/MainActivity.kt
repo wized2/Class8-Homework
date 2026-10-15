@@ -402,7 +402,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyTip() {
-        val tips = (1..20).mapNotNull { i ->
+        val tips = (1..30).mapNotNull { i ->
             val id = resources.getIdentifier("tip_$i", "string", packageName)
             if (id != 0) getString(id) else null
         }

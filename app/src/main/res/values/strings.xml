@@ -57,6 +57,17 @@
     <string name="tip_18">Don\'t copy blindly; rewrite in your own words to remember.</string>
     <string name="tip_19">Ask for help early — waiting until night makes it harder.</string>
     <string name="tip_20">Celebrate small wins: one finished subject is progress.</string>
+    <string name="tip_21">Draw a quick diagram for science — pictures stick better than paragraphs.</string>
+    <string name="tip_22">Memorize formulas by writing them three times without looking.</string>
+    <string name="tip_23">For Urdu or English, underline keywords in the question first.</string>
+    <string name="tip_24">Keep a mistake notebook — one page per subject is enough.</string>
+    <string name="tip_25">Study the example in the book before the exercise questions.</string>
+    <string name="tip_26">If tired, switch subjects instead of quitting early.</string>
+    <string name="tip_27">Put your phone in another room for the hardest subject only.</string>
+    <string name="tip_28">Ask AI Helper for a simple example when a topic feels foggy.</string>
+    <string name="tip_29">Sleep is part of studying — tired brains forget faster.</string>
+    <string name="tip_30">Plan tomorrow’s bag tonight so morning stress drops.</string>
+
     <string name="onboarding_title">Welcome</string>
     <string name="onboarding_sub">Tell us your name so we can personalize Class 8 for you.</string>
     <string name="full_name">Full name</string>
